@@ -1,0 +1,40 @@
+name: ML Model CI
+
+on:
+  push:
+    branches-ignore:
+      - 'main'
+  pull_request:
+
+jobs:
+  validate-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install flake8  # Installing a linter
+
+      - name: Linter Check
+        run: |
+          # This checks for syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Model Dry Test
+        run: |
+          python -c "import torch; print('Model environment ready!')"
+
+      - name: Upload README Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-doc
+          path: README.md
